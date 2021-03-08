@@ -13,5 +13,5 @@ jobs:
       - name: Download
         run: |-
             Invoke-WebRequest "https://raw.githubusercontent.com/pbatard/Fido/master/Fido.ps1" -OutFile Download.ps1
-            \.Download.ps1 -DisableFirstRunCustomize
+            invoke-expression -Command "\.Download.ps1 -DisableFirstRunCustomize"
             ls
