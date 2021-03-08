@@ -41,6 +41,7 @@ def _urlopen(req: Union[Request, str]) -> HTTPResponse:
 
 
 def _rand_slep() -> None:
+    print("...", file=stderr)
     sleep(uniform(0.5, 1))
 
 
