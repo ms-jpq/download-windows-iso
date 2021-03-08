@@ -55,7 +55,6 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
     endpoint = f"http://{remote}:4444/wd/hub"
     firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
     try:
-        print("...", file=stderr)
         firefox.get(_SITE)
 
         WebDriverWait(firefox, timeout=timeout).until(
@@ -234,9 +233,11 @@ def main() -> None:
     if _DOCKER_ENV.exists():
         remote = args.remote
         check_output(("pip3", "install", "selenium"))
+        print("...", file=stderr)
         link = _download_link(remote, lang=lang, timeout=timeout)
         print(link, end="")
     else:
+        print("...", file=stderr)
         link = _run_from_docker(lang=lang, timeout=timeout)
         print(link, file=stderr)
         _download(link=link)
