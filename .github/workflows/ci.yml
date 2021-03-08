@@ -53,4 +53,4 @@ jobs:
           python-version: ${{ matrix.python_ver }}
 
       - name: Test
-        run: ./test.py
+        run: ./download.py --test

@@ -150,14 +150,14 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                 check_call(("docker", "network", "rm", net_name))
 
 
-def _download(link: str) -> None:
+def _download(testing: bool, link: str) -> None:
     mb = 1000 ** 2
 
     parsed = urlsplit(link)
     name = PurePosixPath(parsed.path).name
     dest = Path() / name
     with _urlopen(link) as resp, dest.open("wb") as fd:
-        print(resp.headers)
+        print(resp.headers, file=stderr)
         for key, val in resp.headers.items():
             if key.lower() == "content-length":
                 tot = int(val)
@@ -165,21 +165,26 @@ def _download(link: str) -> None:
         else:
             raise RuntimeError()
 
-        current = 0
-        chunk = resp.read(mb)
-        while chunk:
-            fd.write(chunk)
-            current += len(chunk)
-            if current % (mb * 10) == 0:
-                print(
-                    f"{current // mb}MB / {tot // mb}MB - {int(current / tot * 100)}%"
-                )
+        assert tot > mb * 1000
+        print(dest, file=stderr)
+
+        if not testing:
+            current = 0
+            chunk = resp.read(mb)
+            while chunk:
+                fd.write(chunk)
+                current += len(chunk)
+                if current % (mb * 10) == 0:
+                    print(
+                        f"{current // mb}MB / {tot // mb}MB - {round(current / tot, 2)}"
+                    )
 
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--timeout", type=float, default=20.0)
     parser.add_argument("--language", default="English")
+    parser.add_argument("--test", action="store_true")
     if _DOCKER_ENV.exists():
         parser.add_argument("remote")
     return parser.parse_args()
@@ -194,11 +199,11 @@ def main() -> None:
         remote = args.remote
         check_output(("pip3", "install", "selenium"))
         link = _download_link(remote, lang=lang, timeout=timeout)
-        print(link, file=stderr)
         print(link, end="")
     else:
         link = _run_from_docker(lang=lang, timeout=timeout)
-        _download(link)
+        print(link, file=stderr)
+        _download(args.test, link=link)
 
 
 main()
