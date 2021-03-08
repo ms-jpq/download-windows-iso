@@ -1,3 +1,4 @@
+
 ---
 name: CI
 
@@ -7,11 +8,49 @@ on:
     - cron: "0 0 * * *" # daily
 
 jobs:
-  macos:
-    runs-on: windows-latest
+  mypy:
+    strategy:
+      matrix:
+        python_ver:
+          - 3.8
+          - 3.9
+          - 3.8.2
+
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Download
-        run: |-
-            Invoke-WebRequest "https://raw.githubusercontent.com/pbatard/Fido/master/Fido.ps1" -OutFile "C:\\Download.ps1"
-            ."C:\\Download.ps1" -DisableFirstRunCustomize
-            ls
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python_ver }}
+
+      - name: Pip Packages
+        run: pip install -U mypy
+
+      - name: Lint
+        run: ./lint.sh
+
+  tests:
+    strategy:
+      matrix:
+        python_ver:
+          - 3.8
+          - 3.9
+          - 3.8.2
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python_ver }}
+
+      - name: Test
+        run: ./test.py
