@@ -4,6 +4,7 @@ from argparse import ArgumentParser, Namespace
 from http.client import HTTPResponse
 from io import BufferedIOBase
 from json import loads
+from os import linesep
 from pathlib import Path, PurePosixPath
 from random import uniform
 from shutil import get_terminal_size
@@ -177,9 +178,10 @@ def _read_io(io: BufferedIOBase, buf: int) -> Iterator[bytes]:
 
 
 def _download(link: str) -> None:
+    cols, _ = get_terminal_size()
     parsed = urlsplit(link)
     name = PurePosixPath(parsed.path).name
-    dest = Path() / name
+    dest = (Path() / name).resolve()
 
     with _urlopen(link) as resp, dest.open("wb") as fd:
         print(resp.headers, file=stderr)
@@ -191,7 +193,8 @@ def _download(link: str) -> None:
             raise RuntimeError()
 
         assert tot > _MB * 1000
-        print(dest, file=stderr)
+
+        print("=" * cols, name, "=" * cols, sep=linesep, file=stderr)
         if dest.exists():
             dest.unlink()
 
@@ -204,7 +207,6 @@ def _download(link: str) -> None:
                 line = f"{current // _MB}MB / {tot // _MB}MB - {percent}"
                 print(line, file=stderr)
 
-        cols, _ = get_terminal_size()
         print("=" * cols, file=stderr)
 
 
