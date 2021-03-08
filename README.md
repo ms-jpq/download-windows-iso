@@ -21,6 +21,8 @@ It should work within 1 - 2 tries.
 
 It's not 100% reliable because it uses Selenium to click on links in a headless browser.
 
+Sometimes it hits a robot filter :<
+
 ## How do you know it still works?
 
 [Look at the CI](https://github.com/ms-jpq/download-windows-iso/actions)
