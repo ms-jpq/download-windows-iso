@@ -129,7 +129,6 @@ def _download_link(remote: str, lang: str, timeout: float, tries: int) -> str:
             dump(firefox, name=f"loop{loop}-timed-out")
             close = firefox.find_element_by_xpath("//button[text()='Close']")
             close.click()
-            _rand_slep()
         finally:
             firefox.quit()
     else:
