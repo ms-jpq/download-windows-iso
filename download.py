@@ -2,11 +2,12 @@
 
 from argparse import ArgumentParser, Namespace
 from http.client import HTTPResponse
+from io import BufferedIOBase
 from json import loads
 from pathlib import Path, PurePosixPath
 from subprocess import CalledProcessError, check_call, check_output
 from sys import stderr
-from typing import Union, cast
+from typing import Iterator, Union, cast
 from urllib.parse import urlsplit
 from urllib.request import Request, build_opener
 from uuid import uuid4
@@ -15,6 +16,8 @@ _FILE = Path(__file__).resolve()
 _DOCKER_ENV = Path("/", ".dockerenv")
 _DUMP = Path("/", "dump.png")
 _DEBUG = "debug.png"
+
+_MB = 1000 ** 2
 
 _SITE = "https://www.microsoft.com/en-ca/software-download/windows10ISO"
 
@@ -151,8 +154,14 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                 check_call(("docker", "network", "rm", net_name))
 
 
-def _download(testing: bool, link: str) -> None:
-    mb = 1000 ** 2
+def _read(buf: BufferedIOBase) -> Iterator[bytes]:
+    chunk = buf.read1()
+    while chunk:
+        yield chunk
+        chunk = buf.read1()
+
+
+def _download(link: str) -> None:
 
     parsed = urlsplit(link)
     name = PurePosixPath(parsed.path).name
@@ -166,26 +175,23 @@ def _download(testing: bool, link: str) -> None:
         else:
             raise RuntimeError()
 
-        assert tot > mb * 1000
+        assert tot > _MB * 1000
         print(dest, file=stderr)
 
-        if not testing:
-            current = 0
-            chunk = resp.read(mb)
-            while chunk:
-                fd.write(chunk)
-                current += len(chunk)
-                if current % (mb * 10) == 0:
-                    print(
-                        f"{current // mb}MB / {tot // mb}MB - {round(current / tot, 2)}"
-                    )
+        current = 0
+        for chunk in _read(resp):
+            fd.write(chunk)
+            current += len(chunk)
+            if current % (_MB * 10) == 0:
+                print(
+                    f"{current // _MB}MB / {tot // _MB}MB - {format(current / tot, '.2%')}"
+                )
 
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--timeout", type=float, default=20.0)
     parser.add_argument("--language", default="English")
-    parser.add_argument("--test", action="store_true")
     if _DOCKER_ENV.exists():
         parser.add_argument("remote")
     return parser.parse_args()
@@ -204,7 +210,7 @@ def main() -> None:
     else:
         link = _run_from_docker(lang=lang, timeout=timeout)
         print(link, file=stderr)
-        _download(args.test, link=link)
+        _download(link=link)
 
 
 main()
