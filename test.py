@@ -12,7 +12,7 @@ _MIN_SIZE = 1000 ** 3
 
 
 def main() -> None:
-    proc = run((executable, _SCRIPT))
+    proc = run((executable, _SCRIPT, "--tries", "666"))
     has_err = proc.returncode
     for path in _TOP_LV.glob("*.iso"):
         stat = path.stat()

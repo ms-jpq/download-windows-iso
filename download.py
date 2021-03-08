@@ -238,7 +238,7 @@ def _download(link: str) -> None:
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("--tries", type=int, default=100)
+    parser.add_argument("--tries", type=int, default=5)
     parser.add_argument("--timeout", type=float, default=5.0)
     parser.add_argument("--language", default="English")
     if _DOCKER_ENV.exists():
