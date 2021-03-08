@@ -1,0 +1,17 @@
+---
+name: CI
+
+on:
+  push:
+  schedule:
+    - cron: "0 0 * * *" # daily
+
+jobs:
+  macos:
+    runs-on: windows-latest
+    steps:
+      - name: Download
+        run: |-
+            Invoke-WebRequest "https://raw.githubusercontent.com/pbatard/Fido/master/Fido.ps1" -OutFile Download.ps1
+            \.Download.ps1 -DisableFirstRunCustomize
+            ls
