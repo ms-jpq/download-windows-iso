@@ -177,10 +177,10 @@ def _read_io(io: BufferedIOBase, buf: int) -> Iterator[bytes]:
 
 
 def _download(link: str) -> None:
-
     parsed = urlsplit(link)
     name = PurePosixPath(parsed.path).name
     dest = Path() / name
+
     with _urlopen(link) as resp, dest.open("wb") as fd:
         print(resp.headers, file=stderr)
         for key, val in resp.headers.items():
@@ -192,6 +192,7 @@ def _download(link: str) -> None:
 
         assert tot > _MB * 1000
         print(dest, file=stderr)
+        dest.unlink(missing_ok=True)
 
         current = 0
         for chunk in _read_io(resp, _MB):
