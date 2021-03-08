@@ -59,7 +59,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
     def dump(name: str) -> None:
         screen_dump = str(_DUMP / f"{name}-screenshot.png")
         firefox.get_screenshot_as_file(screen_dump)
-        (_DUMP / "{name}-index.html").write_text(firefox.page_source)
+        (_DUMP / f"{name}-index.html").write_text(firefox.page_source)
 
     try:
         firefox.get(_SITE)
