@@ -55,14 +55,21 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
 
     endpoint = f"http://{remote}:4444/wd/hub"
     firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
+
+    def dump(name: str) -> None:
+        screen_dump = str(_DUMP / f"{name}-screenshot.png")
+        firefox.get_screenshot_as_file(screen_dump)
+        (_DUMP / "{name}-index.html").write_text(firefox.page_source)
+
     try:
         firefox.get(_SITE)
-        for _ in range(3):
+        for loop in range(3):
             try:
                 WebDriverWait(firefox, timeout=timeout).until(
                     element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
                 )
                 _rand_slep()
+                dump(f"loop{loop}-select1")
 
                 product = firefox.find_element_by_id(_FIRST_SELECT_ID)
                 for option in product.find_elements_by_tag_name("option"):
@@ -77,6 +84,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
                     element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
                 )
                 _rand_slep()
+                dump(f"loop{loop}-button1")
 
                 button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
                 button.click()
@@ -85,6 +93,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
                     element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
                 )
                 _rand_slep()
+                dump(f"loop{loop}-select2")
 
                 languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
                 for option in languages.find_elements_by_tag_name("option"):
@@ -100,6 +109,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
                     element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
                 )
                 _rand_slep()
+                dump(f"loop{loop}-button2")
 
                 button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
                 button.click()
@@ -108,6 +118,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
                     element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
                 )
                 _rand_slep()
+                dump(f"loop{loop}-fin")
 
                 button = firefox.find_element_by_link_text("64-bit Download")
                 href = button.get_attribute("href")
@@ -122,9 +133,6 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
             raise TimeoutException()
 
     except WebDriverException:
-        screen_dump = str(_DUMP / "screenshot.png")
-        firefox.get_screenshot_as_file(screen_dump)
-        (_DUMP / "index.html").write_text(firefox.page_source)
         raise
     finally:
         firefox.quit()
