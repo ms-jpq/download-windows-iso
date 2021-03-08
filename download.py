@@ -158,7 +158,6 @@ def _download(link: str) -> None:
     parsed = urlsplit(link)
     name = PurePosixPath(parsed.path).name
     dest = Path() / name
-    dest.touch()
     with _urlopen(link) as resp, dest.open("wb") as fd:
         print(resp.headers)
         for key, val in resp.headers.items():
@@ -173,7 +172,7 @@ def _download(link: str) -> None:
         while chunk:
             fd.write(chunk)
             current += len(chunk)
-            if current % mb == 0:
+            if current % (mb * 10) == 0:
                 print(
                     f"{current // mb}MB / {tot // mb}MB - {int(current / tot * 100)}%"
                 )
