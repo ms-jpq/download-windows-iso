@@ -27,8 +27,8 @@ Sometimes it hits a robot filter :<
 
 [Look at the CI](https://github.com/ms-jpq/download-windows-iso/actions)
 
-If it mostly didn't time out in the past week, the script should work.
+If it worked the past week, the script should work.
 
-Some timeouts are expected because Microsoft has a rate limiter.
+Some timeouts are expected because Microsoft has a rate limiter, and because the CI is running on a public cloud.
 
 I will try to update it whenever it breaks.
