@@ -143,6 +143,7 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                     "-v",
                     f"{_FILE}:/script.py",
                     "python:latest",
+                    "python3",
                     "/script.py",
                     name1,
                     "--language",
