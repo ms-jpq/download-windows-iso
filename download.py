@@ -41,7 +41,7 @@ def _urlopen(req: Union[Request, str]) -> HTTPResponse:
 
 
 def _rand_slep() -> None:
-    print("...", file=stderr)
+    print("...", end="", file=stderr)
     sleep(uniform(0.5, 1))
 
 
@@ -253,7 +253,7 @@ def main() -> None:
     if _DOCKER_ENV.exists():
         _DUMP.mkdir(parents=True, exist_ok=True)
         remote = args.remote
-        print("...", file=stderr)
+        print("...", end="", file=stderr)
         check_output(("pip3", "install", "selenium"))
         print("...", file=stderr)
         link = _download_link(remote, lang=lang, timeout=timeout, tries=args.tries)
