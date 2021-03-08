@@ -183,6 +183,9 @@ def _download(link: str) -> None:
     name = PurePosixPath(parsed.path).name
     dest = (Path() / name).resolve()
 
+    if dest.exists():
+        dest.unlink()
+
     with _urlopen(link) as resp, dest.open("wb") as fd:
         print(resp.headers, file=stderr)
         for key, val in resp.headers.items():
@@ -195,8 +198,6 @@ def _download(link: str) -> None:
         assert tot > (_MB * 1000)
 
         print("=" * cols, name, "=" * cols, sep=linesep, file=stderr)
-        if dest.exists():
-            dest.unlink()
 
         current = 0
         for chunk in _read_io(resp, _MB):
