@@ -126,6 +126,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
                 assert isinstance(href, str)
                 return href
             except TimeoutException:
+                dump("loop{loop}-timed-out")
                 close = firefox.find_element_by_xpath("//button[text()='Close']")
                 close.click()
                 _rand_slep()
