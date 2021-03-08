@@ -4,12 +4,13 @@ from argparse import ArgumentParser, Namespace
 from json import loads
 from pathlib import Path
 from shutil import which
-from subprocess import check_call, check_output
+from subprocess import CalledProcessError, check_call, check_output
 from sys import stderr
 from uuid import uuid4
 
 _FILE = Path(__file__)
 _DOCKER_ENV = Path("/", ".dockerenv")
+_DUMP = Path("/", "dump")
 
 _TIMEOUT = 10.0
 _SITE = "https://www.microsoft.com/en-ca/software-download/windows10ISO"
@@ -25,6 +26,7 @@ _DOWNLOAD_BUTTON_CLASS = "product-download-type"
 
 
 def _download_link(remote: str) -> str:
+    from selenium.common.exceptions import TimeoutException
     from selenium.webdriver import Remote
     from selenium.webdriver.common.by import By
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -77,6 +79,9 @@ def _download_link(remote: str) -> str:
         button = firefox.find_element_by_link_text("64-bit Download")
         href = button.get_attribute("href")
         return href
+    except TimeoutException:
+        firefox.get_screenshot_as_file(str(_DUMP))
+        raise
     finally:
         firefox.quit()
 
@@ -93,56 +98,60 @@ def main() -> None:
 
     if _DOCKER_ENV.exists():
         remote = args.remote
-        check_call(("pip3", "install", "selenium"))
+        check_output(("pip3", "install", "selenium"))
         link = _download_link(remote)
-
-        print(link, file=stderr)
         print(link, end="")
     else:
-        net_name = str(uuid4().hex)
-        name = str(uuid4().hex)
-        try:
-            check_call(("docker", "network", "create", net_name))
-            check_call(
-                (
-                    "docker",
-                    "run",
-                    "--detach",
-                    "--name",
-                    name,
-                    "--network",
-                    net_name,
-                    "--shm-size",
-                    "500M",
-                    "selenium/standalone-firefox",
-                )
-            )
-            link = check_output(
-                (
-                    "docker",
-                    "run",
-                    "--rm",
-                    "--network",
-                    net_name,
-                    "-v",
-                    f"{_FILE}:/main",
-                    "--entrypoint",
-                    "/main",
-                    "python",
-                    name,
-                )
-            )
-        except:
-            pass
+        if not which("wget"):
+            raise RuntimeError()
         else:
-            if which("wget"):
-                pass
-            print(link)
-        finally:
+            net_name = str(uuid4().hex)
+            name1, name2 = str(uuid4().hex), str(uuid4().hex)
             try:
-                check_call(("docker", "rm", "--force", name))
+                check_call(("docker", "network", "create", net_name))
+                check_call(
+                    (
+                        "docker",
+                        "run",
+                        "--detach",
+                        "--name",
+                        name1,
+                        "--network",
+                        net_name,
+                        "--shm-size",
+                        "500M",
+                        "selenium/standalone-firefox",
+                    )
+                )
+                link = check_output(
+                    (
+                        "docker",
+                        "run",
+                        "--name",
+                        name2,
+                        "--network",
+                        net_name,
+                        "-v",
+                        f"{_FILE}:/main",
+                        "--entrypoint",
+                        "/main",
+                        "python",
+                        name1,
+                    ),
+                    text=True,
+                )
+            except CalledProcessError:
+                check_call(("docker", "cp", f"{name2}:{_DUMP}", "debug_screenshot.png"))
+            else:
+                check_call(("wget", link))
             finally:
-                check_call(("docker", "network", "rm", net_name))
+                try:
+                    check_call(("docker", "rm", "--force", name1))
+                finally:
+                    try:
+                        check_call(("docker", "rm", "--force", name2))
+                    finally:
+                        check_call(("docker", "network", "rm", net_name))
 
 
 main()
