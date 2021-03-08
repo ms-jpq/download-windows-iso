@@ -133,6 +133,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
             raise TimeoutException()
 
     except WebDriverException:
+        dump("catch-all")
         raise
     finally:
         firefox.quit()
