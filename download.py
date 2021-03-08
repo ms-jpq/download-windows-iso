@@ -172,7 +172,10 @@ def _download(link: str) -> None:
         while chunk:
             fd.write(chunk)
             current += len(chunk)
-            print(f"{current // mb}MB / {tot // mb}MB - {int(current / tot * 100)}%")
+            if current % mb == 0:
+                print(
+                    f"{current // mb}MB / {tot // mb}MB - {int(current / tot * 100)}%"
+                )
 
 
 def _parse_args() -> Namespace:
