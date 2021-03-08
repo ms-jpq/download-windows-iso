@@ -100,6 +100,7 @@ def main() -> None:
         remote = args.remote
         check_output(("pip3", "install", "selenium"))
         link = _download_link(remote)
+        print(link, file=stderr)
         print(link, end="")
     else:
         if not which("wget"):
