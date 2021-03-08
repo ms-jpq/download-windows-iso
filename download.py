@@ -232,6 +232,7 @@ def main() -> None:
 
     if _DOCKER_ENV.exists():
         remote = args.remote
+        print("...", file=stderr)
         check_output(("pip3", "install", "selenium"))
         print("...", file=stderr)
         link = _download_link(remote, lang=lang, timeout=timeout)
