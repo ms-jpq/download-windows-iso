@@ -17,11 +17,7 @@ wget https://raw.githubusercontent.com/ms-jpq/download-windows-iso/bindows/downl
 python3 download.py
 ```
 
-It should work within 1 - 2 tries.
-
-It's not 100% reliable because it uses Selenium to click on links in a headless browser.
-
-Sometimes it hits a robot filter :<
+It will keep trying to download image until it succeeds.
 
 ## How do you know it still works?
 
