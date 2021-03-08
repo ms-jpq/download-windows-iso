@@ -45,7 +45,7 @@ def _rand_slep() -> None:
     sleep(uniform(0.5, 1))
 
 
-def _download_link(remote: str, lang: str, timeout: float) -> str:
+def _download_link(remote: str, lang: str, timeout: float, tries: int) -> str:
     from selenium.common.exceptions import TimeoutException
     from selenium.webdriver import Remote
     from selenium.webdriver.common.by import By
@@ -60,7 +60,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         (_DUMP / f"{name}-index.html").write_text(driver.page_source)
 
     endpoint = f"http://{remote}:4444/wd/hub"
-    for loop in range(3):
+    for loop in range(tries):
         firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
         try:
             firefox.get(_SITE)
@@ -136,7 +136,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         raise TimeoutException()
 
 
-def _run_from_docker(lang: str, timeout: float) -> str:
+def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
     net_name = str(uuid4().hex)
     name1, name2 = str(uuid4().hex), str(uuid4().hex)
     try:
@@ -175,6 +175,8 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                     lang,
                     "--timeout",
                     str(timeout),
+                    "--tries",
+                    str(tries),
                 ),
                 text=True,
             )
@@ -236,6 +238,7 @@ def _download(link: str) -> None:
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
+    parser.add_argument("--tries", type=int, default=100)
     parser.add_argument("--timeout", type=float, default=5.0)
     parser.add_argument("--language", default="English")
     if _DOCKER_ENV.exists():
@@ -254,11 +257,11 @@ def main() -> None:
         print("...", file=stderr)
         check_output(("pip3", "install", "selenium"))
         print("...", file=stderr)
-        link = _download_link(remote, lang=lang, timeout=timeout)
+        link = _download_link(remote, lang=lang, timeout=timeout, tries=args.tries)
         print(link, end="")
     else:
         print("...", file=stderr)
-        link = _run_from_docker(lang=lang, timeout=timeout)
+        link = _run_from_docker(lang=lang, timeout=timeout, tries=args.tries)
         print(link, file=stderr)
         _download(link=link)
 
