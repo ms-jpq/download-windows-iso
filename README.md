@@ -23,8 +23,4 @@ It will keep trying to download image until it succeeds.
 
 [Look at the CI](https://github.com/ms-jpq/download-windows-iso/actions)
 
-If it worked the past week, the script should work.
-
-Some timeouts are expected because Microsoft has a bot filter, and because the CI is running on a public cloud.
-
 I will try to update it whenever it breaks.
