@@ -85,6 +85,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         )
         button = firefox.find_element_by_link_text("64-bit Download")
         href = button.get_attribute("href")
+        assert isinstance(href, str)
         return href
     except TimeoutException:
         firefox.get_screenshot_as_file(str(_DUMP))
