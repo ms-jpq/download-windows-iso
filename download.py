@@ -110,7 +110,7 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                 net_name,
                 "--shm-size",
                 "500M",
-                "selenium/standalone-firefox",
+                "selenium/standalone-firefox:latest",
             )
         )
 
@@ -125,9 +125,8 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                     net_name,
                     "-v",
                     f"{_FILE}:/main",
-                    "--entrypoint",
+                    "python:latest",
                     "/main",
-                    "python",
                     name1,
                     "--language",
                     lang,
