@@ -5,7 +5,7 @@ from http.client import HTTPResponse
 from io import BufferedIOBase
 from json import loads
 from pathlib import Path, PurePosixPath
-from random import random
+from random import uniform
 from shutil import get_terminal_size
 from subprocess import CalledProcessError, check_call, check_output
 from sys import stderr
@@ -40,7 +40,7 @@ def _urlopen(req: Union[Request, str]) -> HTTPResponse:
 
 
 def _rand_slep() -> None:
-    sleep(random() * 2)
+    sleep(uniform(0.5, 1))
 
 
 def _download_link(remote: str, lang: str, timeout: float) -> str:
