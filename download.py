@@ -110,6 +110,8 @@ def main() -> None:
                     "--detach",
                     "--name",
                     name,
+                    "--network",
+                    net_name,
                     "--shm-size",
                     "500M",
                     "selenium/standalone-firefox",
@@ -120,6 +122,8 @@ def main() -> None:
                     "docker",
                     "run",
                     "--rm",
+                    "--network",
+                    net_name,
                     "-v",
                     f"{_FILE}:/main",
                     "--entrypoint",
@@ -139,7 +143,6 @@ def main() -> None:
                 check_call(("docker", "rm", "--force", name))
             finally:
                 check_call(("docker", "network", "rm", net_name))
-
 
 
 main()
