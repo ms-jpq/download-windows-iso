@@ -115,7 +115,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
                 assert isinstance(href, str)
                 return href
             except TimeoutException:
-                close = firefox.find_element_by_link_text("Close")
+                close = firefox.find_element_by_xpath("button[text()='Close']")
                 close.click()
         else:
             raise TimeoutException()
