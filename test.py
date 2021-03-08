@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from subprocess import check_call, check_output
+from sys import executable
 from typing import Iterator
 
 _TOP_LV = Path(__file__).parent
@@ -18,7 +19,7 @@ def _git_added() -> Iterator[Path]:
 
 
 def main() -> None:
-    check_call(("python3", _SCRIPT))
+    check_call((executable, _SCRIPT))
     for path in _git_added():
         stat = path.stat()
         if stat.st_size > _MIN_SIZE:
