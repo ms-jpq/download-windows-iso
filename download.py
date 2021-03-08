@@ -125,8 +125,6 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                     net_name,
                     "-v",
                     f"{_FILE}:/script.py",
-                    "--entrypoint",
-                    "python3",
                     "python:latest",
                     "/script.py",
                     name1,
