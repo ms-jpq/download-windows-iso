@@ -131,7 +131,7 @@ def _download_link(remote: str, lang: str, timeout: float, tries: int) -> str:
             close.click()
         finally:
             firefox.quit()
-            _rand_sleep()
+            _rand_slep()
     else:
         raise TimeoutException()
 
