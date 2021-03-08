@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser, Namespace
+from http.client import HTTPResponse
 from json import loads
 from pathlib import Path
 from shutil import which
 from subprocess import CalledProcessError, check_call, check_output
 from sys import stderr
+from typing import Union, cast
+from urllib.request import Request, build_opener
 from uuid import uuid4
 
 _FILE = Path(__file__)
@@ -23,6 +26,12 @@ _SECOND_SELECT_ID = "product-languages"
 _SECOND_BUTTON_ID = "submit-sku"
 
 _DOWNLOAD_BUTTON_CLASS = "product-download-type"
+
+
+def _urlopen(req: Union[Request, str]) -> HTTPResponse:
+    opener = build_opener()
+    resp = opener.open(req)
+    return cast(HTTPResponse, resp)
 
 
 def _download_link(remote: str) -> str:
@@ -86,6 +95,59 @@ def _download_link(remote: str) -> str:
         firefox.quit()
 
 
+def _run_from_docker() -> str:
+    net_name = str(uuid4().hex)
+    name1, name2 = str(uuid4().hex), str(uuid4().hex)
+    try:
+        check_call(("docker", "network", "create", net_name))
+        check_call(
+            (
+                "docker",
+                "run",
+                "--detach",
+                "--name",
+                name1,
+                "--network",
+                net_name,
+                "--shm-size",
+                "500M",
+                "selenium/standalone-firefox",
+            )
+        )
+
+        try:
+            link = check_output(
+                (
+                    "docker",
+                    "run",
+                    "--name",
+                    name2,
+                    "--network",
+                    net_name,
+                    "-v",
+                    f"{_FILE}:/main",
+                    "--entrypoint",
+                    "/main",
+                    "python",
+                    name1,
+                ),
+                text=True,
+            )
+        except CalledProcessError:
+            check_call(("docker", "cp", f"{name2}:{_DUMP}", "debug_screenshot.png"))
+            raise
+
+        return link
+    finally:
+        try:
+            check_call(("docker", "rm", "--force", name1))
+        finally:
+            try:
+                check_call(("docker", "rm", "--force", name2))
+            finally:
+                check_call(("docker", "network", "rm", net_name))
+
+
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
     if _DOCKER_ENV.exists():
@@ -95,7 +157,6 @@ def _parse_args() -> Namespace:
 
 def main() -> None:
     args = _parse_args()
-
     if _DOCKER_ENV.exists():
         remote = args.remote
         check_output(("pip3", "install", "selenium"))
@@ -103,56 +164,9 @@ def main() -> None:
         print(link, file=stderr)
         print(link, end="")
     else:
-        if not which("wget"):
-            raise RuntimeError()
-        else:
-            net_name = str(uuid4().hex)
-            name1, name2 = str(uuid4().hex), str(uuid4().hex)
-            try:
-                check_call(("docker", "network", "create", net_name))
-                check_call(
-                    (
-                        "docker",
-                        "run",
-                        "--detach",
-                        "--name",
-                        name1,
-                        "--network",
-                        net_name,
-                        "--shm-size",
-                        "500M",
-                        "selenium/standalone-firefox",
-                    )
-                )
-                link = check_output(
-                    (
-                        "docker",
-                        "run",
-                        "--name",
-                        name2,
-                        "--network",
-                        net_name,
-                        "-v",
-                        f"{_FILE}:/main",
-                        "--entrypoint",
-                        "/main",
-                        "python",
-                        name1,
-                    ),
-                    text=True,
-                )
-            except CalledProcessError:
-                check_call(("docker", "cp", f"{name2}:{_DUMP}", "debug_screenshot.png"))
-            else:
-                check_call(("wget", link))
-            finally:
-                try:
-                    check_call(("docker", "rm", "--force", name1))
-                finally:
-                    try:
-                        check_call(("docker", "rm", "--force", name2))
-                    finally:
-                        check_call(("docker", "network", "rm", net_name))
+        link = _run_from_docker()
+        with _urlopen(link) as fd:
+            fd.read()
 
 
 main()
