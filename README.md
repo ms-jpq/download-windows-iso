@@ -8,6 +8,8 @@ Python script to download Windows from Microsoft's website
 
 2. Docker
 
+No other dependencies.
+
 ## How to use
 
 ```sh
@@ -21,7 +23,7 @@ It's not 100% reliable because it uses Selenium to click on links in a headless 
 
 ## How do you know it still works?
 
-Look at the [CI](https://github.com/ms-jpq/download-windows-iso/actions)
+[Look at the CI](https://github.com/ms-jpq/download-windows-iso/actions)
 
 If it mostly didn't time out in the past week, the script should work.
 
