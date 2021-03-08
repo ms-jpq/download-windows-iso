@@ -94,23 +94,31 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         else:
             assert False
 
-        WebDriverWait(firefox, timeout=timeout).until(
-            element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
-        )
-        _rand_slep()
+        for _ in range(3):
+            try:
+                WebDriverWait(firefox, timeout=timeout).until(
+                    element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
+                )
+                _rand_slep()
 
-        button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
-        button.click()
+                button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
+                button.click()
 
-        WebDriverWait(firefox, timeout=timeout).until(
-            element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
-        )
-        _rand_slep()
+                WebDriverWait(firefox, timeout=timeout).until(
+                    element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
+                )
+                _rand_slep()
 
-        button = firefox.find_element_by_link_text("64-bit Download")
-        href = button.get_attribute("href")
-        assert isinstance(href, str)
-        return href
+                button = firefox.find_element_by_link_text("64-bit Download")
+                href = button.get_attribute("href")
+
+                assert isinstance(href, str)
+                return href
+            except TimeoutException:
+                close = firefox.find_element_by_link_text("Close")
+                close.click()
+        else:
+            raise TimeoutException()
     except TimeoutException:
         firefox.get_screenshot_as_file(str(_DUMP))
         raise
