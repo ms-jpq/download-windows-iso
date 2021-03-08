@@ -154,7 +154,7 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                 check_call(("docker", "network", "rm", net_name))
 
 
-def _read(buf: BufferedIOBase) -> Iterator[bytes]:
+def _read_io(buf: BufferedIOBase) -> Iterator[bytes]:
     chunk = buf.read1()
     while chunk:
         yield chunk
@@ -179,7 +179,7 @@ def _download(link: str) -> None:
         print(dest, file=stderr)
 
         current = 0
-        for chunk in _read(resp):
+        for chunk in _read_io(resp):
             fd.write(chunk)
             current += len(chunk)
             if current % (_MB * 10) == 0:
