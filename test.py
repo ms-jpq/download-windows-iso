@@ -5,7 +5,7 @@ from subprocess import check_call, check_output
 from sys import executable
 from typing import Iterator
 
-_TOP_LV = Path(__file__).parent
+_TOP_LV = Path(__file__).resolve().parent
 _SCRIPT = _TOP_LV / "download.py"
 _MIN_SIZE = 1000 ** 3
 

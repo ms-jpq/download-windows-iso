@@ -11,7 +11,7 @@ from urllib.parse import urlsplit
 from urllib.request import Request, build_opener
 from uuid import uuid4
 
-_FILE = Path(__file__)
+_FILE = Path(__file__).resolve()
 _DOCKER_ENV = Path("/", ".dockerenv")
 _DUMP = Path("/", "dump")
 
