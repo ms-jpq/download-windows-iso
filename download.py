@@ -192,7 +192,8 @@ def _download(link: str) -> None:
 
         assert tot > _MB * 1000
         print(dest, file=stderr)
-        dest.unlink(missing_ok=True)
+        if dest.exists():
+            dest.unlink()
 
         current = 0
         for chunk in _read_io(resp, _MB):
