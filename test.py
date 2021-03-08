@@ -4,7 +4,7 @@ from pathlib import Path
 from subprocess import check_call, check_output
 from typing import Iterator
 
-_TOP_LV = Path(__file__)
+_TOP_LV = Path(__file__).parent
 _SCRIPT = _TOP_LV / "download.py"
 _MIN_SIZE = 1000 ** 3
 
