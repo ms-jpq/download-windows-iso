@@ -61,8 +61,8 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
 
     endpoint = f"http://{remote}:4444/wd/hub"
     for loop in range(3):
+        firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
         try:
-            firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
             firefox.get(_SITE)
 
             WebDriverWait(firefox, timeout=timeout).until(
