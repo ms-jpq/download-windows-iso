@@ -127,7 +127,6 @@ def _download_link(remote: str, lang: str, timeout: float, tries: int) -> str:
             assert isinstance(href, str)
             return href
         except TimeoutException:
-
             WebDriverWait(firefox, timeout=timeout).until(
                 element_to_be_clickable((By.XPATH, _RESET_BUTTON_XPATH))
             )
