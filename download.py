@@ -187,11 +187,9 @@ def _download(link: str) -> None:
     parsed = urlsplit(link)
     name = PurePosixPath(parsed.path).name
     dest = (Path() / name).resolve()
+    tmp = dest.with_suffix(f"{dest.suffix}.part")
 
-    if dest.exists():
-        dest.unlink()
-
-    with _urlopen(link) as resp, dest.open("wb") as fd:
+    with _urlopen(link) as resp, tmp.open("wb") as fd:
         print(resp.headers, file=stderr)
         for key, val in resp.headers.items():
             if key.lower() == "content-length":
@@ -214,6 +212,8 @@ def _download(link: str) -> None:
                 print(line, file=stderr)
 
         print("=" * cols, file=stderr)
+
+    tmp.rename(dest)
 
 
 def _parse_args() -> Namespace:
