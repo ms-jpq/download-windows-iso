@@ -18,14 +18,13 @@ def _git_added() -> Iterator[Path]:
 
 
 def main() -> None:
-    check_call(("ls",))
-    # check_call((_SCRIPT,))
-    # for path in _git_added():
-        # stat = path.stat()
-        # if stat.st_size > _MIN_SIZE:
-            # break
-    # else:
-        # exit(1)
+    check_call(("python3", _SCRIPT))
+    for path in _git_added():
+        stat = path.stat()
+        if stat.st_size > _MIN_SIZE:
+            break
+    else:
+        exit(1)
 
 
 main()
