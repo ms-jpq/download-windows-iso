@@ -32,6 +32,7 @@ _SECOND_SELECT_ID = "product-languages"
 _SECOND_BUTTON_ID = "submit-sku"
 
 _DOWNLOAD_BUTTON_CLASS = "product-download-type"
+_RESET_BUTTON_XPATH = "//button[text()='Close']"
 
 
 def _urlopen(req: Union[Request, str]) -> HTTPResponse:
@@ -126,9 +127,13 @@ def _download_link(remote: str, lang: str, timeout: float, tries: int) -> str:
             assert isinstance(href, str)
             return href
         except TimeoutException:
-            dump(firefox, name=f"loop{loop}-timed-out")
-            close = firefox.find_element_by_xpath("//button[text()='Close']")
+
+            WebDriverWait(firefox, timeout=timeout).until(
+                element_to_be_clickable((By.XPATH, _RESET_BUTTON_XPATH))
+            )
+            close = firefox.find_element_by_xpath(_RESET_BUTTON_XPATH)
             close.click()
+            dump(firefox, name=f"loop{loop}-timed-out")
         finally:
             firefox.quit()
             _rand_slep()
