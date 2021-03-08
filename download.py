@@ -5,8 +5,10 @@ from http.client import HTTPResponse
 from io import BufferedIOBase
 from json import loads
 from pathlib import Path, PurePosixPath
+from random import random
 from subprocess import CalledProcessError, check_call, check_output
 from sys import stderr
+from time import sleep
 from typing import Iterator, Union, cast
 from urllib.parse import urlsplit
 from urllib.request import Request, build_opener
@@ -36,6 +38,10 @@ def _urlopen(req: Union[Request, str]) -> HTTPResponse:
     return cast(HTTPResponse, resp)
 
 
+def _rand_slep() -> None:
+    sleep(random() * 2)
+
+
 def _download_link(remote: str, lang: str, timeout: float) -> str:
     from selenium.common.exceptions import TimeoutException
     from selenium.webdriver import Remote
@@ -52,6 +58,8 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         WebDriverWait(firefox, timeout=timeout).until(
             element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
         )
+        _rand_slep()
+
         product = firefox.find_element_by_id(_FIRST_SELECT_ID)
         for option in product.find_elements_by_tag_name("option"):
             value = option.get_attribute("value") or ""
@@ -64,14 +72,17 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         WebDriverWait(firefox, timeout=timeout).until(
             element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
         )
+        _rand_slep()
+
         button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
         button.click()
 
         WebDriverWait(firefox, timeout=timeout).until(
             element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
         )
-        languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
+        _rand_slep()
 
+        languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
         for option in languages.find_elements_by_tag_name("option"):
             value = option.get_attribute("value") or "{}"
             json = loads(value)
@@ -87,6 +98,8 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         WebDriverWait(firefox, timeout=timeout).until(
             element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
         )
+        _rand_slep()
+
         button = firefox.find_element_by_link_text("64-bit Download")
         href = button.get_attribute("href")
         assert isinstance(href, str)
