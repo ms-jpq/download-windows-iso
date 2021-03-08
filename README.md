@@ -29,6 +29,6 @@ Sometimes it hits a robot filter :<
 
 If it worked the past week, the script should work.
 
-Some timeouts are expected because Microsoft has a rate limiter, and because the CI is running on a public cloud.
+Some timeouts are expected because Microsoft has a bot filter, and because the CI is running on a public cloud.
 
 I will try to update it whenever it breaks.
