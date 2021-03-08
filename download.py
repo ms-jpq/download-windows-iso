@@ -192,7 +192,7 @@ def _download(link: str) -> None:
         else:
             raise RuntimeError()
 
-        assert tot > _MB * 1000
+        assert tot > (_MB * 1000)
 
         print("=" * cols, name, "=" * cols, sep=linesep, file=stderr)
         if dest.exists():
