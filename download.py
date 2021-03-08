@@ -3,11 +3,11 @@
 from argparse import ArgumentParser, Namespace
 from http.client import HTTPResponse
 from json import loads
-from pathlib import Path
-from shutil import which
+from pathlib import Path, PurePosixPath
 from subprocess import CalledProcessError, check_call, check_output
 from sys import stderr
 from typing import Union, cast
+from urllib.parse import urlsplit
 from urllib.request import Request, build_opener
 from uuid import uuid4
 
@@ -15,9 +15,7 @@ _FILE = Path(__file__)
 _DOCKER_ENV = Path("/", ".dockerenv")
 _DUMP = Path("/", "dump")
 
-_TIMEOUT = 10.0
 _SITE = "https://www.microsoft.com/en-ca/software-download/windows10ISO"
-_LANGUAGE = "English"
 
 _FIRST_SELECT_ID = "product-edition"
 _FIRST_BUTTON_ID = "submit-product-edition"
@@ -34,7 +32,7 @@ def _urlopen(req: Union[Request, str]) -> HTTPResponse:
     return cast(HTTPResponse, resp)
 
 
-def _download_link(remote: str) -> str:
+def _download_link(remote: str, lang: str, timeout: float) -> str:
     from selenium.common.exceptions import TimeoutException
     from selenium.webdriver import Remote
     from selenium.webdriver.common.by import By
@@ -47,7 +45,7 @@ def _download_link(remote: str) -> str:
     try:
         firefox.get(_SITE)
 
-        WebDriverWait(firefox, timeout=_TIMEOUT).until(
+        WebDriverWait(firefox, timeout=timeout).until(
             element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
         )
         product = firefox.find_element_by_id(_FIRST_SELECT_ID)
@@ -59,13 +57,13 @@ def _download_link(remote: str) -> str:
         else:
             assert False
 
-        WebDriverWait(firefox, timeout=_TIMEOUT).until(
+        WebDriverWait(firefox, timeout=timeout).until(
             element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
         )
         button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
         button.click()
 
-        WebDriverWait(firefox, timeout=_TIMEOUT).until(
+        WebDriverWait(firefox, timeout=timeout).until(
             element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
         )
         languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
@@ -73,7 +71,7 @@ def _download_link(remote: str) -> str:
         for option in languages.find_elements_by_tag_name("option"):
             value = option.get_attribute("value") or "{}"
             json = loads(value)
-            if json.get("language") == _LANGUAGE:
+            if json.get("language") == lang:
                 option.click()
                 break
         else:
@@ -82,7 +80,7 @@ def _download_link(remote: str) -> str:
         button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
         button.click()
 
-        WebDriverWait(firefox, timeout=_TIMEOUT).until(
+        WebDriverWait(firefox, timeout=timeout).until(
             element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
         )
         button = firefox.find_element_by_link_text("64-bit Download")
@@ -95,7 +93,7 @@ def _download_link(remote: str) -> str:
         firefox.quit()
 
 
-def _run_from_docker() -> str:
+def _run_from_docker(lang: str, timeout: float) -> str:
     net_name = str(uuid4().hex)
     name1, name2 = str(uuid4().hex), str(uuid4().hex)
     try:
@@ -130,6 +128,10 @@ def _run_from_docker() -> str:
                     "/main",
                     "python",
                     name1,
+                    "--language",
+                    lang,
+                    "--timeout",
+                    str(timeout),
                 ),
                 text=True,
             )
@@ -148,8 +150,34 @@ def _run_from_docker() -> str:
                 check_call(("docker", "network", "rm", net_name))
 
 
+def _download(link: str) -> None:
+    mb = 1000 ** 2
+
+    parsed = urlsplit(link)
+    name = PurePosixPath(parsed.path).name
+    dest = Path() / name
+    dest.touch()
+    with _urlopen(link) as resp, dest.open("wb") as fd:
+        print(resp.headers)
+        for key, val in resp.headers.items():
+            if key.lower() == "content-length":
+                tot = int(val)
+                break
+        else:
+            raise RuntimeError()
+
+        current = 0
+        chunk = resp.read(mb)
+        fd.write(chunk)
+        current += len(chunk)
+
+        print(f"{current // mb}MB / {tot // mb}MB - {int(current / tot * 100)}%")
+
+
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
+    parser.add_argument("--timeout", type=float, default=20.0)
+    parser.add_argument("--language", default="English")
     if _DOCKER_ENV.exists():
         parser.add_argument("remote")
     return parser.parse_args()
@@ -157,16 +185,18 @@ def _parse_args() -> Namespace:
 
 def main() -> None:
     args = _parse_args()
+    lang = args.language
+    timeout = args.timeout
+
     if _DOCKER_ENV.exists():
         remote = args.remote
         check_output(("pip3", "install", "selenium"))
-        link = _download_link(remote)
+        link = _download_link(remote, lang=lang, timeout=timeout)
         print(link, file=stderr)
         print(link, end="")
     else:
-        link = _run_from_docker()
-        with _urlopen(link) as fd:
-            fd.read()
+        link = _run_from_docker(lang=lang, timeout=timeout)
+        _download(link)
 
 
 main()
