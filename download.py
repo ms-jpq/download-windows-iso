@@ -18,8 +18,8 @@ from uuid import uuid4
 
 _FILE = Path(__file__).resolve()
 _DOCKER_ENV = Path("/", ".dockerenv")
-_DUMP = Path("/", "dump.png")
-_DEBUG = "debug.png"
+_DUMP = Path("/", "dump")
+_DEBUG = _FILE.parent / "debug"
 
 _MB = 1000 ** 2
 
@@ -120,7 +120,9 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         else:
             raise TimeoutException()
     except TimeoutException:
-        firefox.get_screenshot_as_file(str(_DUMP))
+        screen_dump = str(_DUMP / "screenshot.png")
+        firefox.get_screenshot_as_file(screen_dump)
+        (_DUMP / "index.html").write_text(firefox.page_source)
         raise
     finally:
         firefox.quit()
@@ -169,7 +171,7 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                 text=True,
             )
         except CalledProcessError:
-            check_call(("docker", "cp", f"{name2}:{_DUMP}", _DEBUG))
+            check_call(("docker", "cp", f"{name2}:{_DUMP}/", f"{_DEBUG}/"))
             raise
 
         return link
@@ -239,6 +241,7 @@ def main() -> None:
     timeout = args.timeout
 
     if _DOCKER_ENV.exists():
+        _DUMP.mkdir(parents=True, exist_ok=True)
         remote = args.remote
         print("...", file=stderr)
         check_output(("pip3", "install", "selenium"))

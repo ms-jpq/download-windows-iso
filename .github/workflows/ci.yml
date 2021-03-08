@@ -58,5 +58,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: debug.png
-          path: debug.png
+          name: debug.zip
+          path: debug.zip
