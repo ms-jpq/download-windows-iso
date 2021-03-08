@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Download
         run: |-
-            Invoke-WebRequest "https://raw.githubusercontent.com/pbatard/Fido/master/Fido.ps1" -OutFile Download.ps1
-            $exec = Resolve-Path "Download.ps1"
-            echo "$exec"
-            ."$exec" -DisableFirstRunCustomize
+            Invoke-WebRequest "https://raw.githubusercontent.com/pbatard/Fido/master/Fido.ps1" -OutFile "C:\\Download.ps1"
+            ."C:\\Download.ps1" -DisableFirstRunCustomize
             ls
