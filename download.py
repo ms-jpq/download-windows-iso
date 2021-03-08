@@ -56,46 +56,45 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
     firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
     try:
         firefox.get(_SITE)
-
-        WebDriverWait(firefox, timeout=timeout).until(
-            element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
-        )
-        _rand_slep()
-
-        product = firefox.find_element_by_id(_FIRST_SELECT_ID)
-        for option in product.find_elements_by_tag_name("option"):
-            value = option.get_attribute("value") or ""
-            if value.isdigit():
-                option.click()
-                break
-        else:
-            assert False
-
-        WebDriverWait(firefox, timeout=timeout).until(
-            element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
-        )
-        _rand_slep()
-
-        button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
-        button.click()
-
-        WebDriverWait(firefox, timeout=timeout).until(
-            element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
-        )
-        _rand_slep()
-
-        languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
-        for option in languages.find_elements_by_tag_name("option"):
-            value = option.get_attribute("value") or "{}"
-            json = loads(value)
-            if json.get("language") == lang:
-                option.click()
-                break
-        else:
-            assert False
-
         for _ in range(3):
             try:
+                WebDriverWait(firefox, timeout=timeout).until(
+                    element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
+                )
+                _rand_slep()
+
+                product = firefox.find_element_by_id(_FIRST_SELECT_ID)
+                for option in product.find_elements_by_tag_name("option"):
+                    value = option.get_attribute("value") or ""
+                    if value.isdigit():
+                        option.click()
+                        break
+                else:
+                    assert False
+
+                WebDriverWait(firefox, timeout=timeout).until(
+                    element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
+                )
+                _rand_slep()
+
+                button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
+                button.click()
+
+                WebDriverWait(firefox, timeout=timeout).until(
+                    element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
+                )
+                _rand_slep()
+
+                languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
+                for option in languages.find_elements_by_tag_name("option"):
+                    value = option.get_attribute("value") or "{}"
+                    json = loads(value)
+                    if json.get("language") == lang:
+                        option.click()
+                        break
+                else:
+                    assert False
+
                 WebDriverWait(firefox, timeout=timeout).until(
                     element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
                 )
