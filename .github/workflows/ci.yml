@@ -52,4 +52,10 @@ jobs:
           python-version: ${{ matrix.python_ver }}
 
       - name: Test
-        run: ./download.py --test
+        run: ./test.sh
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: debug.png
+          path: debug.png

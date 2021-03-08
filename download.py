@@ -13,7 +13,8 @@ from uuid import uuid4
 
 _FILE = Path(__file__).resolve()
 _DOCKER_ENV = Path("/", ".dockerenv")
-_DUMP = Path("/", "dump")
+_DUMP = Path("/", "dump.png")
+_DEBUG = "debug.png"
 
 _SITE = "https://www.microsoft.com/en-ca/software-download/windows10ISO"
 
@@ -136,7 +137,7 @@ def _run_from_docker(lang: str, timeout: float) -> str:
                 text=True,
             )
         except CalledProcessError:
-            check_call(("docker", "cp", f"{name2}:{_DUMP}", "debug_screenshot.png"))
+            check_call(("docker", "cp", f"{name2}:{_DUMP}", _DEBUG))
             raise
 
         return link
