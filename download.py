@@ -168,10 +168,10 @@ def _run_from_docker(lang: str, timeout: float) -> str:
 
 
 def _read_io(io: BufferedIOBase, buf: int) -> Iterator[bytes]:
-    chunk = io.read1(buf)
+    chunk = io.read(buf)
     while chunk:
         yield chunk
-        chunk = io.read1(buf)
+        chunk = io.read(buf)
 
 
 def _download(link: str) -> None:
