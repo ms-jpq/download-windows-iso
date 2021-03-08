@@ -255,7 +255,7 @@ def main() -> None:
         remote = args.remote
         print("...", end="", flush=True, file=stderr)
         check_output(("pip3", "install", "selenium"))
-        print("...", file=stderr)
+        print("...", end="", flush=True, file=stderr)
         link = _download_link(remote, lang=lang, timeout=timeout, tries=args.tries)
         print(link, end="")
     else:
