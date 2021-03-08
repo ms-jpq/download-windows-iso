@@ -94,6 +94,11 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         else:
             assert False
 
+        WebDriverWait(firefox, timeout=timeout).until(
+            element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
+        )
+        _rand_slep()
+
         button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
         button.click()
 
