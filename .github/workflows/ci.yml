@@ -52,7 +52,7 @@ jobs:
           python-version: ${{ matrix.python_ver }}
 
       - name: Test
-        run: ./test.sh
+        run: ./test.py
 
       - name: Upload Artifacts
         if: always()

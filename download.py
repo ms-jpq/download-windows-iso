@@ -6,6 +6,7 @@ from io import BufferedIOBase
 from json import loads
 from pathlib import Path, PurePosixPath
 from random import random
+from shutil import get_terminal_size
 from subprocess import CalledProcessError, check_call, check_output
 from sys import stderr
 from time import sleep
@@ -197,9 +198,12 @@ def _download(link: str) -> None:
             fd.write(chunk)
             current += len(chunk)
             if current % (_MB * 10) == 0:
-                print(
-                    f"{current // _MB}MB / {tot // _MB}MB - {format(current / tot, '.2%')}"
-                )
+                percent = format(current / tot, ".2%")
+                line = f"{current // _MB}MB / {tot // _MB}MB - {percent}"
+                print(line, file=stderr)
+
+        cols, _ = get_terminal_size()
+        print("=" * cols, file=stderr)
 
 
 def _parse_args() -> Namespace:
