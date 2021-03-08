@@ -45,7 +45,7 @@ def _rand_slep() -> None:
 
 
 def _download_link(remote: str, lang: str, timeout: float) -> str:
-    from selenium.common.exceptions import TimeoutException
+    from selenium.common.exceptions import TimeoutException, WebDriverException
     from selenium.webdriver import Remote
     from selenium.webdriver.common.by import By
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -119,7 +119,8 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
                 close.click()
         else:
             raise TimeoutException()
-    except TimeoutException:
+
+    except WebDriverException:
         screen_dump = str(_DUMP / "screenshot.png")
         firefox.get_screenshot_as_file(screen_dump)
         (_DUMP / "index.html").write_text(firefox.page_source)
