@@ -55,6 +55,7 @@ jobs:
         run: ./test.sh
 
       - name: Upload Artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: debug.png
