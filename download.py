@@ -203,13 +203,17 @@ def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
                 yield pool.submit(single)
 
         for _ in range(tries):
+            link = ""
             for fut in as_completed(tuple(multiple())):
                 try:
-                    link = cast(str, fut.result())
+                    ret = cast(str, fut.result())
+                    if ret:
+                        link = ret
                 except CalledProcessError:
                     pass
-                else:
-                    return link
+
+            if link:
+                return link
         else:
             raise RuntimeError()
 
