@@ -33,7 +33,7 @@ I will try to update it whenever it breaks.
 
 This script is designed to run on a CI, AKA not your hardware.
 
-It will spin up `cpu_count()` instances of headless browsers in Docker at the same time.
+It will spin up **by default** `cpu_count()` instances of headless browsers in Docker at the same time.
 
 This will help to cut down flakiness at cost of compute.
 

@@ -190,7 +190,7 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
         exit(1)
 
 
-def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
+def _run_from_docker(lang: str, timeout: float, parallelism: int, tries: int) -> str:
     with ThreadPoolExecutor() as pool, _use_network() as net_name:
 
         def single() -> str:
@@ -200,7 +200,7 @@ def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
                 )
 
         def multiple() -> Iterator[Future]:
-            for _ in range(cpu_count()):
+            for _ in range(parallelism):
                 yield pool.submit(single)
 
         for _ in range(tries):
@@ -260,6 +260,7 @@ def _download(link: str) -> None:
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
+    parser.add_argument("--parallelism", type=int, default=cpu_count())
     parser.add_argument("--tries", type=int, default=66)
     parser.add_argument("--timeout", type=float, default=5.0)
     parser.add_argument("--language", default="English")
@@ -283,7 +284,9 @@ def main() -> None:
         print(link, end="")
     else:
         print("...", file=stderr)
-        link = _run_from_docker(lang=lang, timeout=timeout, tries=args.tries)
+        link = _run_from_docker(
+            lang=lang, timeout=timeout, parallelism=args.parallelism, tries=args.tries
+        )
         print(link, file=stderr)
         _download(link=link)
 
