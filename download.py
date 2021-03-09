@@ -55,6 +55,7 @@ def _use_network() -> Iterator[str]:
         check_call(("docker", "network", "create", name))
         yield name
     finally:
+        sleep(1)
         check_call(("docker", "network", "rm", name))
 
 
