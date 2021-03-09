@@ -25,7 +25,7 @@ If you are unlucky, it might take 2 or 3 runs.
 
 [Look at the CI](https://github.com/ms-jpq/download-windows-iso/actions)
 
-It has a simple test, if the script downloads something over 1000MB, it's probably the Windows ISO.
+It has a simple test, if the script downloads `*.iso` over 1000MB, it's probably the Windows ISO.
 
 I will try to update it whenever it breaks.
 
