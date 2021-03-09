@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser, Namespace
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from http.client import HTTPResponse
 from io import BufferedIOBase
 from json import loads
@@ -32,7 +34,6 @@ _SECOND_SELECT_ID = "product-languages"
 _SECOND_BUTTON_ID = "submit-sku"
 
 _DOWNLOAD_BUTTON_CLASS = "product-download-type"
-_RESET_BUTTON_XPATH = "//button[text()='Close']"
 
 
 def _urlopen(req: Union[Request, str]) -> HTTPResponse:
@@ -46,105 +47,141 @@ def _rand_slep() -> None:
     sleep(uniform(0.5, 1))
 
 
-def _download_link(remote: str, lang: str, timeout: float, tries: int) -> str:
-    from selenium.common.exceptions import TimeoutException
+@contextmanager
+def _use_network() -> Iterator[str]:
+    name = str(uuid4().hex)
+    try:
+        check_call(("docker", "network", "create", name))
+        yield name
+    finally:
+        check_call(("docker", "network", "rm", name))
+
+
+@contextmanager
+def _use_remote(net_name: str) -> Iterator[str]:
+    name = str(uuid4().hex)
+    try:
+        check_call(
+            (
+                "docker",
+                "run",
+                "--detach",
+                "--name",
+                name,
+                "--network",
+                net_name,
+                "--shm-size",
+                "500M",
+                "selenium/standalone-firefox:latest",
+            )
+        )
+        yield name
+    finally:
+        check_call(("docker", "rm", "--force", name))
+
+
+def _download_link(remote: str, lang: str, timeout: float) -> str:
     from selenium.webdriver import Remote
     from selenium.webdriver.common.by import By
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-    from selenium.webdriver.remote.webdriver import WebDriver
+    # from selenium.webdriver.remote.webdriver import WebDriver
     from selenium.webdriver.support.expected_conditions import element_to_be_clickable
     from selenium.webdriver.support.ui import WebDriverWait
 
-    def dump(driver: WebDriver, name: str) -> None:
-        screen_dump = str(_DUMP / f"{name}-screenshot.png")
-        driver.get_screenshot_as_file(screen_dump)
-        (_DUMP / f"{name}-index.html").write_text(driver.page_source)
+    # def dump(driver: WebDriver, name: str) -> None:
+        # screen_dump = str(_DUMP / f"{name}-screenshot.png")
+        # driver.get_screenshot_as_file(screen_dump)
+        # (_DUMP / f"{name}-index.html").write_text(driver.page_source)
 
     endpoint = f"http://{remote}:4444/wd/hub"
-    for loop in range(tries):
-        firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
-        try:
-            firefox.get(_SITE)
+    firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
+    firefox.get(_SITE)
 
-            WebDriverWait(firefox, timeout=timeout).until(
-                element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
-            )
-            _rand_slep()
-            dump(firefox, name=f"loop{loop}-select1")
+    WebDriverWait(firefox, timeout=timeout).until(
+        element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
+    )
+    _rand_slep()
 
-            product = firefox.find_element_by_id(_FIRST_SELECT_ID)
-            for option in product.find_elements_by_tag_name("option"):
-                value = option.get_attribute("value") or ""
-                if value.isdigit():
-                    option.click()
-                    break
-            else:
-                assert False
-
-            WebDriverWait(firefox, timeout=timeout).until(
-                element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
-            )
-            _rand_slep()
-            dump(firefox, name=f"loop{loop}-button1")
-
-            button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
-            button.click()
-
-            WebDriverWait(firefox, timeout=timeout).until(
-                element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
-            )
-            _rand_slep()
-            dump(firefox, name=f"loop{loop}-select2")
-
-            languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
-            for option in languages.find_elements_by_tag_name("option"):
-                value = option.get_attribute("value") or "{}"
-                json = loads(value)
-                if json.get("language") == lang:
-                    option.click()
-                    break
-            else:
-                assert False
-
-            WebDriverWait(firefox, timeout=timeout).until(
-                element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
-            )
-            _rand_slep()
-            dump(firefox, name=f"loop{loop}-button2")
-
-            button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
-            button.click()
-
-            WebDriverWait(firefox, timeout=timeout).until(
-                element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
-            )
-            _rand_slep()
-            dump(firefox, name=f"loop{loop}-fin")
-
-            button = firefox.find_element_by_link_text("64-bit Download")
-            href = button.get_attribute("href")
-
-            assert isinstance(href, str)
-            return href
-        except TimeoutException:
-            WebDriverWait(firefox, timeout=timeout).until(
-                element_to_be_clickable((By.XPATH, _RESET_BUTTON_XPATH))
-            )
-            close = firefox.find_element_by_xpath(_RESET_BUTTON_XPATH)
-            close.click()
-            dump(firefox, name=f"loop{loop}-timed-out")
-        finally:
-            firefox.quit()
-            _rand_slep()
+    product = firefox.find_element_by_id(_FIRST_SELECT_ID)
+    for option in product.find_elements_by_tag_name("option"):
+        value = option.get_attribute("value") or ""
+        if value.isdigit():
+            option.click()
+            break
     else:
-        raise TimeoutException()
+        assert False
 
+    WebDriverWait(firefox, timeout=timeout).until(
+        element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
+    )
+    _rand_slep()
+
+    button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
+    button.click()
+
+    WebDriverWait(firefox, timeout=timeout).until(
+        element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
+    )
+    _rand_slep()
+
+    languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
+    for option in languages.find_elements_by_tag_name("option"):
+        value = option.get_attribute("value") or "{}"
+        json = loads(value)
+        if json.get("language") == lang:
+            option.click()
+            break
+    else:
+        assert False
+
+    WebDriverWait(firefox, timeout=timeout).until(
+        element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
+    )
+    _rand_slep()
+
+    button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
+    button.click()
+
+    WebDriverWait(firefox, timeout=timeout).until(
+        element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
+    )
+    _rand_slep()
+
+    button = firefox.find_element_by_link_text("64-bit Download")
+    href = button.get_attribute("href")
+
+    assert isinstance(href, str)
+    return href
+
+def _run_in_docker(lang: str, timeout: float) -> str:
+    link = check_output(
+        (
+            "docker",
+            "run",
+            "--name",
+            name2,
+            "--network",
+            net_name,
+            "-v",
+            f"{_FILE}:/script.py",
+            "python:latest",
+            "python3",
+            "/script.py",
+            name1,
+            "--language",
+            lang,
+            "--timeout",
+            str(timeout),
+            "--tries",
+            str(tries),
+        ),
+        text=True,
+    )
 
 def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
     net_name = str(uuid4().hex)
     name1, name2 = str(uuid4().hex), str(uuid4().hex)
     try:
-        check_call(("docker", "network", "create", net_name))
         check_call(
             (
                 "docker",
@@ -161,29 +198,6 @@ def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
         )
 
         try:
-            link = check_output(
-                (
-                    "docker",
-                    "run",
-                    "--name",
-                    name2,
-                    "--network",
-                    net_name,
-                    "-v",
-                    f"{_FILE}:/script.py",
-                    "python:latest",
-                    "python3",
-                    "/script.py",
-                    name1,
-                    "--language",
-                    lang,
-                    "--timeout",
-                    str(timeout),
-                    "--tries",
-                    str(tries),
-                ),
-                text=True,
-            )
         except CalledProcessError:
             check_call(("docker", "cp", f"{name2}:{_DUMP}/", f"{_DEBUG}/"))
             raise
@@ -193,10 +207,7 @@ def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
         try:
             check_call(("docker", "rm", "--force", name1))
         finally:
-            try:
-                check_call(("docker", "rm", "--force", name2))
-            finally:
-                check_call(("docker", "network", "rm", net_name))
+            check_call(("docker", "rm", "--force", name2))
 
 
 def _read_io(io: BufferedIOBase, buf: int) -> Iterator[bytes]:
@@ -261,7 +272,7 @@ def main() -> None:
         print("...", end="", flush=True, file=stderr)
         check_output(("pip3", "install", "selenium"))
         print("...", end="", flush=True, file=stderr)
-        link = _download_link(remote, lang=lang, timeout=timeout, tries=args.tries)
+        link = _download_link(remote, lang=lang, timeout=timeout)
         print(link, end="")
     else:
         print("...", file=stderr)
