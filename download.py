@@ -214,7 +214,7 @@ def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
             if link:
                 return link
         else:
-            raise RuntimeError()
+            raise TimeoutError()
 
 
 def _read_io(io: BufferedIOBase, buf: int) -> Iterator[bytes]:
