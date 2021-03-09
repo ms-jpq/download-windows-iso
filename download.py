@@ -238,7 +238,7 @@ def _download(link: str) -> None:
                 tot = int(val)
                 break
         else:
-            raise RuntimeError()
+            raise KeyError()
 
         assert tot > (_MB * 1000)
 
