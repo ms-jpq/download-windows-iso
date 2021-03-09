@@ -23,4 +23,16 @@ It will keep trying to download image until it succeeds.
 
 [Look at the CI](https://github.com/ms-jpq/download-windows-iso/actions)
 
+It has a simple test, if the script downloads something over 1000MB, it's probably the Windows ISO.
+
 I will try to update it whenever it breaks.
+
+## Why are my fans so loud?
+
+This script is designed to run on a CI, AKA not your hardware.
+
+It will spin up `cpu_count()` instances of headless browsers in Docker at the same time.
+
+This will help to cut down flakiness at cost of compute.
+
+Since I am running this on Microsoft's dime, I don't really care about the resource usage.
