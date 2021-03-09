@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentParser, Namespace
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from http.client import HTTPResponse
 from io import BufferedIOBase
 from json import loads
+from multiprocessing import cpu_count
 from os import linesep
 from pathlib import Path, PurePosixPath
 from random import uniform
@@ -80,18 +81,48 @@ def _use_remote(net_name: str) -> Iterator[str]:
         check_call(("docker", "rm", "--force", name))
 
 
+def _run_in_docker(net_name: str, remote_name: str, lang: str, timeout: float) -> str:
+    name = str(uuid4().hex)
+    try:
+        link = check_output(
+            (
+                "docker",
+                "run",
+                "--name",
+                name,
+                "--network",
+                net_name,
+                "-v",
+                f"{_FILE}:/script.py",
+                "python:latest",
+                "python3",
+                "/script.py",
+                remote_name,
+                "--language",
+                lang,
+                "--timeout",
+                str(timeout),
+            ),
+            text=True,
+        )
+        return link
+    finally:
+        check_call(("docker", "rm", "--force", name))
+
+
 def _download_link(remote: str, lang: str, timeout: float) -> str:
     from selenium.webdriver import Remote
     from selenium.webdriver.common.by import By
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
     # from selenium.webdriver.remote.webdriver import WebDriver
     from selenium.webdriver.support.expected_conditions import element_to_be_clickable
     from selenium.webdriver.support.ui import WebDriverWait
 
     # def dump(driver: WebDriver, name: str) -> None:
-        # screen_dump = str(_DUMP / f"{name}-screenshot.png")
-        # driver.get_screenshot_as_file(screen_dump)
-        # (_DUMP / f"{name}-index.html").write_text(driver.page_source)
+    # screen_dump = str(_DUMP / f"{name}-screenshot.png")
+    # driver.get_screenshot_as_file(screen_dump)
+    # (_DUMP / f"{name}-index.html").write_text(driver.page_source)
 
     endpoint = f"http://{remote}:4444/wd/hub"
     firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
@@ -153,61 +184,30 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
     assert isinstance(href, str)
     return href
 
-def _run_in_docker(lang: str, timeout: float) -> str:
-    link = check_output(
-        (
-            "docker",
-            "run",
-            "--name",
-            name2,
-            "--network",
-            net_name,
-            "-v",
-            f"{_FILE}:/script.py",
-            "python:latest",
-            "python3",
-            "/script.py",
-            name1,
-            "--language",
-            lang,
-            "--timeout",
-            str(timeout),
-            "--tries",
-            str(tries),
-        ),
-        text=True,
-    )
 
 def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
-    net_name = str(uuid4().hex)
-    name1, name2 = str(uuid4().hex), str(uuid4().hex)
-    try:
-        check_call(
-            (
-                "docker",
-                "run",
-                "--detach",
-                "--name",
-                name1,
-                "--network",
-                net_name,
-                "--shm-size",
-                "500M",
-                "selenium/standalone-firefox:latest",
-            )
-        )
+    with ThreadPoolExecutor() as pool, _use_network() as net_name:
 
-        try:
-        except CalledProcessError:
-            check_call(("docker", "cp", f"{name2}:{_DUMP}/", f"{_DEBUG}/"))
-            raise
+        def single() -> str:
+            with _use_remote(net_name) as remote_name:
+                return _run_in_docker(
+                    net_name, remote_name=remote_name, timeout=timeout, lang=lang
+                )
 
-        return link
-    finally:
-        try:
-            check_call(("docker", "rm", "--force", name1))
-        finally:
-            check_call(("docker", "rm", "--force", name2))
+        def multiple() -> Iterator[Future]:
+            for _ in range(cpu_count()):
+                yield pool.submit(single)
+
+        for _ in range(tries):
+            for fut in as_completed(tuple(multiple())):
+                try:
+                    link = cast(str, fut.result())
+                except CalledProcessError:
+                    pass
+                else:
+                    return link
+        else:
+            raise RuntimeError()
 
 
 def _read_io(io: BufferedIOBase, buf: int) -> Iterator[bytes]:
