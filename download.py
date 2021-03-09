@@ -111,6 +111,7 @@ def _run_in_docker(net_name: str, remote_name: str, lang: str, timeout: float) -
 
 
 def _download_link(remote: str, lang: str, timeout: float) -> str:
+    from selenium.common.exceptions import TimeoutException
     from selenium.webdriver import Remote
     from selenium.webdriver.common.by import By
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -124,65 +125,68 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
     # driver.get_screenshot_as_file(screen_dump)
     # (_DUMP / f"{name}-index.html").write_text(driver.page_source)
 
-    endpoint = f"http://{remote}:4444/wd/hub"
-    firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
-    firefox.get(_SITE)
+    try:
+        endpoint = f"http://{remote}:4444/wd/hub"
+        firefox = Remote(endpoint, DesiredCapabilities.FIREFOX)
+        firefox.get(_SITE)
 
-    WebDriverWait(firefox, timeout=timeout).until(
-        element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
-    )
-    _rand_slep()
+        WebDriverWait(firefox, timeout=timeout).until(
+            element_to_be_clickable((By.ID, _FIRST_SELECT_ID))
+        )
+        _rand_slep()
 
-    product = firefox.find_element_by_id(_FIRST_SELECT_ID)
-    for option in product.find_elements_by_tag_name("option"):
-        value = option.get_attribute("value") or ""
-        if value.isdigit():
-            option.click()
-            break
-    else:
-        assert False
+        product = firefox.find_element_by_id(_FIRST_SELECT_ID)
+        for option in product.find_elements_by_tag_name("option"):
+            value = option.get_attribute("value") or ""
+            if value.isdigit():
+                option.click()
+                break
+        else:
+            assert False
 
-    WebDriverWait(firefox, timeout=timeout).until(
-        element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
-    )
-    _rand_slep()
+        WebDriverWait(firefox, timeout=timeout).until(
+            element_to_be_clickable((By.ID, _FIRST_BUTTON_ID))
+        )
+        _rand_slep()
 
-    button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
-    button.click()
+        button = firefox.find_element_by_id(_FIRST_BUTTON_ID)
+        button.click()
 
-    WebDriverWait(firefox, timeout=timeout).until(
-        element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
-    )
-    _rand_slep()
+        WebDriverWait(firefox, timeout=timeout).until(
+            element_to_be_clickable((By.ID, _SECOND_SELECT_ID))
+        )
+        _rand_slep()
 
-    languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
-    for option in languages.find_elements_by_tag_name("option"):
-        value = option.get_attribute("value") or "{}"
-        json = loads(value)
-        if json.get("language") == lang:
-            option.click()
-            break
-    else:
-        assert False
+        languages = firefox.find_element_by_id(_SECOND_SELECT_ID)
+        for option in languages.find_elements_by_tag_name("option"):
+            value = option.get_attribute("value") or "{}"
+            json = loads(value)
+            if json.get("language") == lang:
+                option.click()
+                break
+        else:
+            assert False
 
-    WebDriverWait(firefox, timeout=timeout).until(
-        element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
-    )
-    _rand_slep()
+        WebDriverWait(firefox, timeout=timeout).until(
+            element_to_be_clickable((By.ID, _SECOND_BUTTON_ID))
+        )
+        _rand_slep()
 
-    button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
-    button.click()
+        button = firefox.find_element_by_id(_SECOND_BUTTON_ID)
+        button.click()
 
-    WebDriverWait(firefox, timeout=timeout).until(
-        element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
-    )
-    _rand_slep()
+        WebDriverWait(firefox, timeout=timeout).until(
+            element_to_be_clickable((By.CLASS_NAME, _DOWNLOAD_BUTTON_CLASS))
+        )
+        _rand_slep()
 
-    button = firefox.find_element_by_link_text("64-bit Download")
-    href = button.get_attribute("href")
+        button = firefox.find_element_by_link_text("64-bit Download")
+        href = button.get_attribute("href")
 
-    assert isinstance(href, str)
-    return href
+        assert isinstance(href, str)
+        return href
+    except TimeoutException:
+        exit(1)
 
 
 def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
