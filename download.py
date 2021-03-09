@@ -55,7 +55,6 @@ def _use_network() -> Iterator[str]:
         check_call(("docker", "network", "create", name))
         yield name
     finally:
-        sleep(1)
         check_call(("docker", "network", "rm", name))
 
 
@@ -80,6 +79,7 @@ def _use_remote(net_name: str) -> Iterator[str]:
         yield name
     finally:
         check_call(("docker", "rm", "--force", name))
+        sleep(1)
 
 
 def _run_in_docker(net_name: str, remote_name: str, lang: str, timeout: float) -> str:
@@ -207,9 +207,7 @@ def _run_from_docker(lang: str, timeout: float, tries: int) -> str:
             link = ""
             for fut in as_completed(tuple(multiple())):
                 try:
-                    ret = cast(str, fut.result())
-                    if ret:
-                        link = ret
+                    link = cast(str, fut.result())
                 except CalledProcessError:
                     pass
 
