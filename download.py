@@ -36,6 +36,9 @@ _SECOND_BUTTON_ID = "submit-sku"
 
 _DOWNLOAD_BUTTON_CLASS = "product-download-type"
 
+_DOCKER_PYTHON = "python:latest"
+_DOCKER_SELENIUM = "selenium/standalone-firefox:latest"
+
 
 def _urlopen(req: Union[Request, str]) -> HTTPResponse:
     opener = build_opener()
@@ -73,7 +76,7 @@ def _use_remote(net_name: str) -> Iterator[str]:
                 net_name,
                 "--shm-size",
                 "500M",
-                "selenium/standalone-firefox:latest",
+                _DOCKER_SELENIUM,
             )
         )
         yield name
@@ -95,7 +98,7 @@ def _run_in_docker(net_name: str, remote_name: str, lang: str, timeout: float) -
                 net_name,
                 "-v",
                 f"{_FILE}:/script.py",
-                "python:latest",
+                _DOCKER_PYTHON,
                 "python3",
                 "/script.py",
                 remote_name,
@@ -191,7 +194,12 @@ def _download_link(remote: str, lang: str, timeout: float) -> str:
 
 
 def _run_from_docker(lang: str, timeout: float, parallelism: int, tries: int) -> str:
+    p1 = lambda: check_call(("docker", "pull", _DOCKER_PYTHON))
+    p2 = lambda: check_call(("docker", "pull", _DOCKER_SELENIUM))
+
     with ThreadPoolExecutor() as pool, _use_network() as net_name:
+        for fut in as_completed((pool.submit(p1), pool.submit(p2))):
+            fut.result()
 
         def single() -> str:
             with _use_remote(net_name) as remote_name:
