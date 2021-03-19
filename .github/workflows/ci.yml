@@ -52,7 +52,7 @@ jobs:
           python-version: ${{ matrix.python_ver }}
 
       - name: Test
-        run: ./pack.py
+        run: sudo ./pack.py
 
       # - name: Upload Artifacts
         # if: always()

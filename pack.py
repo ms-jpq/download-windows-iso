@@ -9,17 +9,11 @@ _SCRIPT = _TOP_LV / "download.py"
 
 
 def main() -> None:
-    check_call(
-        ("sudo", "apt-get", "install", "--yes", "--", "wimtools", "libguestfs-tools")
-    )
+    check_call(("apt-get", "install", "--yes", "--", "wimtools", "libguestfs-tools"))
     try:
-        check_call(
-            ("sudo", "snap", "install", "--classic", "--edge", "--", "distrobuilder")
-        )
+        check_call(("snap", "install", "--classic", "--edge", "--", "distrobuilder"))
     except CalledProcessError:
-        check_call(
-            ("sudo", "snap", "refresh", "--classic", "--edge", "--", "distrobuilder")
-        )
+        check_call(("snap", "refresh", "--classic", "--edge", "--", "distrobuilder"))
     check_call((executable, _SCRIPT, "--tries", "666"))
     for path in _TOP_LV.glob("*.iso"):
         dest = path.parent / path.with_name(f"packed-{path.name}")
