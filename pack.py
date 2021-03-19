@@ -7,10 +7,11 @@ from sys import executable
 _TOP_LV = Path(__file__).resolve().parent
 _SCRIPT = _TOP_LV / "download.py"
 
+APT_PACKAGES = ("libwin-hivex-perl", "wimtools", "genisoimage")
 
 def main() -> None:
     check_call(("apt-get", "update"))
-    check_call(("apt-get", "install", "--yes", "--", "wimtools", "libguestfs-tools"))
+    check_call(("apt-get", "install", "--yes", "--", *APT_PACKAGES))
     try:
         check_call(("snap", "install", "--classic", "--edge", "--", "distrobuilder"))
     except CalledProcessError:
