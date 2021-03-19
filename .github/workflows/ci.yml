@@ -52,11 +52,11 @@ jobs:
           python-version: ${{ matrix.python_ver }}
 
       - name: Test
-        run: ./test.py
+        run: ./pack.py
 
-      - name: Upload Artifacts
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: debug.zip
-          path: debug.zip
+      # - name: Upload Artifacts
+        # if: always()
+        # uses: actions/upload-artifact@v2
+        # with:
+          # name: debug.zip
+          # path: debug.zip
