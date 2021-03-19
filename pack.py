@@ -9,6 +9,7 @@ _SCRIPT = _TOP_LV / "download.py"
 
 
 def main() -> None:
+    check_call(("apt-get", "update"))
     check_call(("apt-get", "install", "--yes", "--", "wimtools", "libguestfs-tools"))
     try:
         check_call(("snap", "install", "--classic", "--edge", "--", "distrobuilder"))
