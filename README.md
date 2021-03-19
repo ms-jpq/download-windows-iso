@@ -21,6 +21,16 @@ It will keep trying to download image until it succeeds.
 
 If you are unlucky, it might take 2 or 3 runs.
 
+## To pack Windows ISO for KVM (with VirtIO Drivers)
+
+Only works on Ubuntu
+
+```sh
+wget https://raw.githubusercontent.com/ms-jpq/download-windows-iso/bindows/download.py
+wget https://raw.githubusercontent.com/ms-jpq/download-windows-iso/bindows/pack.py
+python3 pack.py
+```
+
 ## How do you know it still works?
 
 [Look at the CI](https://github.com/ms-jpq/download-windows-iso/actions)
