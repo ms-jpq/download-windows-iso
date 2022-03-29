@@ -9,13 +9,6 @@ on:
 
 jobs:
   mypy:
-    strategy:
-      matrix:
-        python_ver:
-          - 3.8
-          - 3.9
-          - 3.8.2
-
     runs-on: ubuntu-latest
 
     steps:
@@ -24,8 +17,6 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python_ver }}
 
       - name: Pip Packages
         run: pip install -U mypy
@@ -34,11 +25,6 @@ jobs:
         run: ./lint.sh
 
   tests:
-    strategy:
-      matrix:
-        python_ver:
-          - 3.9
-
     runs-on: ubuntu-latest
 
     steps:
@@ -47,8 +33,6 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python_ver }}
 
       - name: Test
         run: sudo ./download.py
