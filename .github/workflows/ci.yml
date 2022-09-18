@@ -18,7 +18,9 @@ jobs:
         uses: actions/setup-python@v3
 
       - name: Pip Packages
-        run: pip install -U mypy
+        run: |-
+          pip install -U mypy
+          pip install -r ./requirements.txt
 
       - name: Lint
         run: mypy -- .
@@ -30,11 +32,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v3
-
-      - name: Build
-        run: docker compose build
-
       - name: Test
-        run: docker run download-windows-iso-bindows
+        run: ./download.sh

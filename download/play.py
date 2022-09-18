@@ -4,15 +4,15 @@ from playwright.async_api import async_playwright
 
 from .logging import log
 
-_URL = "https://www.microsoft.com/software-download/windows11"
 
-
-async def down(lang: str) -> str:
+async def down(*, lang: str, timeout: float) -> str:
     async with async_playwright() as ctx:
         async with await ctx.chromium.launch() as chrome:
             async with await chrome.new_page() as page:
                 with nullcontext():
-                    s1 = await page.goto(_URL)
+                    s1 = await page.goto(
+                        "https://www.microsoft.com/software-download/windows11"
+                    )
                     log.info("%s", s1)
 
                 with nullcontext():
@@ -40,7 +40,6 @@ async def down(lang: str) -> str:
                         "a", has=page.locator(".product-download-type")
                     )
                     log.info("%s", selector)
-                    uri = await selector.get_attribute("href")
+                    uri = await selector.get_attribute("href", timeout=timeout)
                     assert uri, "Missing Download Link!"
-
-                return uri
+                    return uri
