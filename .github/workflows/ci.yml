@@ -1,4 +1,3 @@
-
 ---
 name: CI
 
@@ -13,33 +12,29 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
 
       - name: Pip Packages
         run: pip install -U mypy
 
       - name: Lint
-        run: ./lint.sh
+        run: mypy -- .
 
   tests:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
+
+      - name: Build
+        run: docker compose build
 
       - name: Test
-        run: sudo ./download.py
-
-      # - name: Upload Artifacts
-        # if: always()
-        # uses: actions/upload-artifact@v2
-        # with:
-          # name: debug.zip
-          # path: debug.zip
+        run: docker run download-windows-iso-bindows
