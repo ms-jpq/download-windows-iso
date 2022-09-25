@@ -13,4 +13,4 @@ docker compose build
 docker run "$IMAGE" | tee -- "$LOG"
 
 URI="$(tail --lines 1 -- "$LOG")"
-wget -- "$URI"
+wget --content-disposition -- "$URI"
