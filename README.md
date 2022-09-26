@@ -12,6 +12,13 @@ Python script to download Windows from Microsoft's website
 
 ## Usage
 
+### Step 1
+
 ```
-./download.sh
+# Default to `English International`
+./download.sh [-l LANGUAGE]
 ```
+
+### Step 2
+
+Check `./tmp/*`

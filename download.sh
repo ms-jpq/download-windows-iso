@@ -10,7 +10,7 @@ IMAGE="$(basename -- "$DIRNAME")-bindows"
 LOG="$(mktemp)"
 
 docker compose build
-docker run "$IMAGE" | tee -- "$LOG"
+docker run "$IMAGE" "$@" | tee -- "$LOG"
 
 URI="$(tail --lines 1 -- "$LOG")"
 

@@ -10,7 +10,7 @@ from .play import down
 
 def _parse_args() -> Namespace:
     parser = ArgumentParser()
-    parser.add_argument("--language", default="English International")
+    parser.add_argument("-l", "--language")
     parser.add_argument("--timeout", default=100, type=int)
     return parser.parse_args()
 

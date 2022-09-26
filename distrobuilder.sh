@@ -2,7 +2,7 @@
 
 set -eu
 set -o pipefail
-shopt -s nullglob globstar
+shopt -s failglob globstar
 
 DIRNAME="$(dirname -- "$0")"
 
@@ -13,4 +13,4 @@ SRC="$*"
 NAME="$(basename -- "$SRC")"
 DST="$DIRNAME/tmp/${NAME%.*}.lxd.iso"
 
-exec distrobuilder repack-windows --drivers ./virtio-win*.iso -- "$SRC" "$DST"
+exec distrobuilder repack-windows --drivers ./tmp/virtio-win*.iso -- "$SRC" "$DST"
