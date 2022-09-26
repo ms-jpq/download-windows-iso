@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 
 set -eu
+set -o pipefail
+shopt -s nullglob globstar
 
-SRC="$1"
-DST="$2"
+DIRNAME="$(dirname -- "$0")"
 
-exec distrobuilder repack-windows -- "$SRC" "$DST"
+cd "$DIRNAME" || exit 1
+
+
+SRC="$*"
+NAME="$(basename -- "$SRC")"
+DST="$DIRNAME/tmp/${NAME%.*}.lxd.iso"
+
+exec distrobuilder repack-windows --drivers ./virtio-win*.iso -- "$SRC" "$DST"
