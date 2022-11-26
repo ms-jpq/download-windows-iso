@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-set -eu
+set -Eeu
 set -o pipefail
-shopt -s failglob globstar
+shopt -s globstar nullglob
 
 DIRNAME="$(dirname -- "$0")"
 
-cd "$DIRNAME" || exit 1
+cd -- "$DIRNAME" || exit 1
 
 
 SRC="$*"

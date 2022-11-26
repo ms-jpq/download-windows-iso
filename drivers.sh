@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
-cd "$(dirname -- "$0")/tmp" || exit 1
+set -Eeu
+set -o pipefail
+shopt -s globstar nullglob
+
+
+cd -- "$(dirname -- "$0")/tmp" || exit 1
+
 
 URI='https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
 

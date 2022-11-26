@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 
-set -eux
+set -Eeu
 set -o pipefail
+shopt -s globstar nullglob
+
 
 DIRNAME="$(dirname -- "$(realpath -- "$0")")"
-cd "$DIRNAME" || exit 1
+cd -- "$DIRNAME" || exit 1
 
 IMAGE="$(basename -- "$DIRNAME")-bindows"
 LOG="$(mktemp)"
 
 docker compose build
-docker run "$IMAGE" "$@" | tee -- "$LOG"
+docker run -- "$IMAGE" "$@" | tee -- "$LOG"
 
 URI="$(tail --lines 1 -- "$LOG")"
 
