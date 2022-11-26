@@ -13,4 +13,5 @@ SRC="$*"
 NAME="$(basename -- "$SRC")"
 DST="$DIRNAME/tmp/${NAME%.*}.lxd.iso"
 
+# apt install --yes -- libwin-hivex-perl
 exec distrobuilder repack-windows --drivers ./tmp/virtio-win*.iso -- "$SRC" "$DST"

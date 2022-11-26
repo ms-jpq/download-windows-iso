@@ -19,11 +19,12 @@ jobs:
 
       - name: Pip Packages
         run: |-
-          pip install -U mypy
+          pip install -- mypy
           pip install -r ./requirements.txt
 
       - name: Lint
-        run: mypy -- .
+        run: |-
+          mypy -- .
 
   tests:
     runs-on: ubuntu-latest
